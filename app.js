@@ -880,22 +880,23 @@ function renderMarketCtx(){
     const idxChip=(label,o)=>{
       if(!o||o.price==null) return '';
       const c=o.rate>0?UP:o.rate<0?DN:FL, sign=o.rate>0?'▲':o.rate<0?'▼':'–';
-      return `<div style="flex:1;min-width:118px;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px">
+      return `<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px">
         <div style="font-size:11px;color:var(--text3);font-weight:600">${label}</div>
         <div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${Number(o.price).toLocaleString('ko-KR')}</div>
         <div style="font-size:11.5px;font-weight:700;color:${c};font-variant-numeric:tabular-nums">${sign} ${o.rate>0?'+':''}${Number(o.rate||0).toFixed(2)}%</div>
       </div>`;
     };
-    const fx=d.usdKrw!=null?`<div style="flex:1;min-width:108px;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">원/달러</div><div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${Number(d.usdKrw).toLocaleString('ko-KR')}원</div></div>`:'';
+    const fx=d.usdKrw!=null?`<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">원/달러</div><div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${Number(d.usdKrw).toLocaleString('ko-KR')}원</div></div>`:'';
     const fngVal=(d.fng&&typeof d.fng==='object')?d.fng.score:d.fng;
-    const fng=(fngVal!=null)?`<div style="flex:1;min-width:108px;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">투자심리(공포·탐욕)</div><div style="font-size:16px;font-weight:800">${fngVal} <span style="font-size:11px;font-weight:600;color:var(--text3)">${fngLabelKo(fngVal)}</span></div></div>`:'';
+    const fng=(fngVal!=null)?`<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">투자심리(공포·탐욕)</div><div style="font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:4px;white-space:nowrap">${fngVal}<span style="font-size:11px;font-weight:600;color:var(--text3)">${fngLabelKo(fngVal)}</span></div></div>`:'';
     const chips=[idxChip('코스피',d.kospi),idxChip('코스닥',d.kosdaq),fx,fng].filter(Boolean).join('');
     if(!chips){ box.innerHTML=''; return; }
-    const liveBadge=live?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#fff;background:#E23B3B;padding:2px 7px;border-radius:999px">● 실시간</span>`:'';
+    const liveBadge=live?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#fff;background:#E23B3B;padding:2px 7px;border-radius:999px;white-space:nowrap">● 실시간</span>`:'';
     const basisText=live?`장중 실시간 · ${fmtClockKST(liveTime)} 기준 · 15분 간격 갱신${d.fxLive?' · 환율 실시간':''}`:`${d.basisDate?d.basisDate+' 지수 기준':'전일 지수 기준'}${d.fxLive?' · 환율 실시간 반영':''}`;
     box.innerHTML=`<div style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:13px;font-weight:700">시장 지표</span>${liveBadge}<span style="font-size:11px;color:var(--text3)">${basisText}</span></div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">${chips}</div></div>`;
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span style="font-size:13px;font-weight:700;white-space:nowrap">시장 지표</span>${liveBadge}</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:9px">${basisText}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:100%">${chips}</div></div>`;
   }).catch(()=>{ /* 갱신 실패 시 기존 표시 유지 */ });
   load();
   if(_marketCtxTimer) clearInterval(_marketCtxTimer);
@@ -1257,7 +1258,8 @@ function renderWorkspaceSubscribe(){
   </button>`;
   const upcomingLabel=cur.length?`<div class="workspace-list-divider first">청약 예정</div>`:'';
   const curHtml=cur.map(i=>listBtn(i, `${fmtDate(i.subscribeStart)}${sectorTxt(i)}`)).join('');
-  const pastHtml=past.length?`<div class="workspace-list-divider">지난 청약</div>`+past.map(i=>listBtn(i, `상장 ${i.listingDate?fmtDate(i.listingDate):'미정'}${sectorTxt(i)}`)).join(''):'';
+  const pastRow=i=>`<button class="workspace-past-btn ${String(stratPick)===String(i.id)?'on':''}" onclick="stratPickIpo('${h(i.id)}')"><span class="wpb-name">${h(i.name)}</span><span class="wpb-date">${i.listingDate?'상장 '+fmtDate(i.listingDate):'상장 미정'}</span></button>`;
+  const pastHtml=past.length?`<div class="workspace-list-divider">지난 청약</div>`+past.map(pastRow).join(''):'';
   // 종목명 아래 한 줄(섹터 기반) + 중앙 회사 개요 패널(상세)
   const sectorShort = (pick&&pick.sector&&pick.sector!=='미정') ? `${h(pick.sector)} 분야 기업` : '';
   const detailText = pick ? (pick.businessSummary ? h(pick.businessSummary)
@@ -1289,17 +1291,16 @@ function renderWorkspaceSubscribe(){
               <div class="scp-title">🏢 회사 개요</div>
               <div class="scp-body">${detailText}</div>
             </div>
-            <div class="strat-folds">
-              <details class="strat-fold" open><summary><span>청약 세부 조건</span><b>일정·주관사·배정</b></summary>
-                <table class="data-table strat-compact-table"><tbody>
-                  ${infoRow('주관사', h((pick.securities||[]).join(', ')||'미정'))}
-                  ${infoRow('수요예측 경쟁률', pick.competitionRate?fmt.num(pick.competitionRate)+':1':'미정')}
-                  ${infoRow('환불일', pick.refundDate||'미정')}
-                  ${infoRow('상장예정일', pick.listingDate||'미정')}
-                  ${infoRow('의무보유확약', fmtPct(pick.lockup ?? pick.lockupTotalRatio))}
-                  ${infoRow('상장 직후 유통가능 비율', fmtPct(pick.tradableRatioAfterListing))}
-                </tbody></table>
-              </details>
+            <div class="strat-detail-panel">
+              <div class="sdp-head"><span>청약 세부 조건</span><b>일정·주관사·배정</b></div>
+              <table class="data-table strat-compact-table"><tbody>
+                ${infoRow('주관사', h((pick.securities||[]).join(', ')||'미정'))}
+                ${infoRow('수요예측 경쟁률', pick.competitionRate?fmt.num(pick.competitionRate)+':1':'미정')}
+                ${infoRow('환불일', pick.refundDate||'미정')}
+                ${infoRow('상장예정일', pick.listingDate||'미정')}
+                ${infoRow('의무보유확약', fmtPct(pick.lockup ?? pick.lockupTotalRatio))}
+                ${infoRow('상장 직후 유통가능 비율', fmtPct(pick.tradableRatioAfterListing))}
+              </tbody></table>
             </div>
           </div>`:''}
       </div>

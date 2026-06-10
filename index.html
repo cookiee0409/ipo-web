@@ -247,8 +247,8 @@ img{display:block}
 .ipo-card-top{padding:18px 20px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .ipo-card-market{display:flex;align-items:center;gap:6px;margin-bottom:7px}
 .ipo-card-market-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;background:var(--bg2);color:var(--text2);letter-spacing:.02em}
-.ipo-card-sector-tag{font-size:11.5px;color:var(--text3);font-weight:500}
-.ipo-card-name{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:0}
+.ipo-card-sector-tag{font-size:11.5px;color:var(--text3);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.ipo-card-name{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ipo-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .d-badge{font-size:12px;font-weight:700;padding:5px 11px;border-radius:8px;white-space:nowrap}
 .d-badge.active{background:#FFF0E6;color:#E05A00}
@@ -1048,7 +1048,7 @@ img{display:block}
 .comp-bar-fill.undetermined{background:#CBD5E1!important}
 
 /* 리스크 배지 + 종목 비교표 */
-.risk-badges{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.risk-badges{display:inline-flex;align-items:center;column-gap:5px;row-gap:4px;flex-wrap:wrap}
 .risk-badge{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1;white-space:nowrap;border:1px solid transparent}
 .risk-safe,.risk-low{background:var(--positive-tint);color:var(--positive);border-color:rgba(26,122,88,.18)}
 .risk-mid{background:#FFFBEB;color:#B45309;border-color:#FDE68A}
@@ -1129,7 +1129,7 @@ img{display:block}
 .mini-compare-row span{min-width:0;font-size:12.5px;color:var(--text2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini-compare-row span:first-child b{display:block;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis}
 .mini-compare-row span:first-child em{display:block;font-style:normal;font-size:10.5px;color:var(--text3);font-weight:600;margin-top:1px}
-.mini-compare-row .risk-badges{flex-wrap:nowrap}
+.mini-compare-row .risk-badges{flex-wrap:wrap;overflow:hidden;max-width:100%}
 @media(max-width:900px){
   #tab-strategy .strat-split{grid-template-columns:1fr}
   #tab-strategy .strat-list{max-height:none;overflow:visible;padding-right:0}
@@ -1251,10 +1251,18 @@ img{display:block}
 .workspace-list-divider{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:14px 2px 4px;padding-top:12px;border-top:1px solid var(--border-soft)}
 .workspace-list-divider.first{margin-top:0;padding-top:0;border-top:none}
 .strat-company-desc{font-size:12.5px;color:var(--text2);line-height:1.5;margin-top:9px;max-width:640px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.strat-detail-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.strat-detail-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .strat-company-panel{background:var(--panel);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm);padding:16px 18px;min-height:200px}
 .scp-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px}
 .scp-body{font-size:13px;color:var(--text2);line-height:1.75;white-space:pre-line}
+.strat-detail-panel{background:var(--panel);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm);overflow:hidden}
+.sdp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-soft)}
+.sdp-head>span{font-size:14px;font-weight:800;color:var(--text)}
+.sdp-head>b{font-size:11.5px;font-weight:700;color:var(--text3);white-space:nowrap}
+.workspace-past-btn{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:9px 12px;border:1px solid var(--border-soft);border-radius:8px;background:transparent;transition:all .14s}
+.workspace-past-btn.on,.workspace-past-btn:hover{background:var(--bg2);border-color:var(--border)}
+.workspace-past-btn .wpb-name{font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workspace-past-btn .wpb-date{font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0}
 .strat-detail-split .strat-folds{gap:9px}
 .strat-side-info{background:var(--bg2);border:1px solid var(--border-soft);border-radius:11px;padding:14px 15px}
 .ssi-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:10px}
@@ -1282,7 +1290,7 @@ img{display:block}
 .workspace-sell-card .sub,.workspace-alloc-card .sub{font-size:12px;color:var(--text3);margin-top:5px}
 .planner-combined{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
 .planner-combined-section{background:var(--panel);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:18px}
-.dashboard-main-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.dashboard-main-grid{display:grid;grid-template-columns:minmax(0,1fr) min(340px,35%);gap:18px;align-items:start}
 .dashboard-left,.dashboard-right{min-width:0}
 .dashboard-right{display:flex;flex-direction:column;gap:16px}
 .dashboard-right #market-ctx-bar>div{margin-bottom:0!important}
