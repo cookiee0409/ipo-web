@@ -750,7 +750,11 @@ function renderDashboard(){
   const sortedActive=[...active].sort((a,b)=>(a.subscribeStart||'').localeCompare(b.subscribeStart||''));
   el('home-active-count').textContent=` ${active.length}·청약 진행`;
   el('home-active-list').innerHTML=active.length===0
-    ?'<div style="padding:20px 16px;text-align:center;color:var(--text3);font-size:13px;background:var(--panel);border:1.5px solid var(--border);border-radius:var(--radius)">현재 청약중인 종목이 없습니다.</div>'
+    ?`<div style="padding:26px 16px;text-align:center;background:var(--panel);border:1.5px solid var(--border);border-radius:var(--radius)">
+        <div style="font-size:13.5px;color:var(--text2);font-weight:600;margin-bottom:4px">현재 청약 중인 종목이 없습니다</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${upcoming.length>0?`곧 시작될 청약 예정 종목 ${upcoming.length}개를 아래에서 확인해 보세요.`:'새 공모 일정이 등록되면 여기에 표시됩니다.'}</div>
+        <button class="panel-more" onclick="switchTab('schedule')">공모주 일정 보기 →</button>
+      </div>`
     :`<div class="home-card-grid">${sortedActive.map(ipoCard).join('')}</div>`;
 
   // 예정 카드 (최대 3개 + 더보기)
@@ -800,19 +804,24 @@ function arrangeDashboardLayout(){
 function renderDashboardSupport(active, upcoming){
   const keyDate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const todayKey=keyDate(TODAY);
+  // 임박 알림(D-2 이내): 오늘만이 아니라 곧 다가오는 청약·마감·환불·상장을 능동적으로 노출
+  const dd=s=>{ if(!s) return null; return Math.ceil((new Date(s+'T00:00:00')-TODAY)/86400000); };
   const todayEvents=[];
   IPOS.filter(i=>!i.isSpac).forEach(i=>{
-    if(i.subscribeStart===todayKey) todayEvents.push({mark:'S',title:`${i.name} 청약 시작`,meta:`${(i.securities||[]).join(', ')||'주관사 미정'} · 최소 ${_minDeposit(i).toLocaleString('ko-KR')}원`,id:i.id});
-    if(i.subscribeEnd===todayKey) todayEvents.push({mark:'M',title:`${i.name} 청약 마감`,meta:'마감 전 경쟁률과 증거금 확인',id:i.id});
-    if(i.refundDate===todayKey) todayEvents.push({mark:'R',title:`${i.name} 환불일`,meta:'환불금 재투입 가능 여부 확인',id:i.id});
-    if(i.listingDate===todayKey) todayEvents.push({mark:'L',title:`${i.name} 상장일`,meta:'초기 변동성과 매도 전략 확인',id:i.id});
+    const dS=dd(i.subscribeStart), dE=dd(i.subscribeEnd), dR=dd(i.refundDate), dL=dd(i.listingDate);
+    if(dS!=null&&dS>=0&&dS<=2) todayEvents.push({d:dS,mark:'S',title:`${i.name} 청약 시작`,meta:`${(i.securities||[]).join(', ')||'주관사 미정'} · 최소 ${_minDeposit(i).toLocaleString('ko-KR')}원`,id:i.id});
+    if(dE!=null&&dE>=0&&dE<=1) todayEvents.push({d:dE,mark:'M',title:`${i.name} 청약 마감`,meta:'마감 전 경쟁률과 증거금 확인',id:i.id});
+    if(dR!=null&&dR>=0&&dR<=2) todayEvents.push({d:dR,mark:'R',title:`${i.name} 환불일`,meta:'환불금 재투입 가능 여부 확인',id:i.id});
+    if(dL!=null&&dL>=0&&dL<=1) todayEvents.push({d:dL,mark:'L',title:`${i.name} 상장일`,meta:'초기 변동성과 매도 전략 확인',id:i.id});
   });
-  const todoHtml=todayEvents.length?todayEvents.slice(0,5).map(t=>`
+  todayEvents.sort((a,b)=>a.d-b.d);
+  const ddLbl=n=>n===0?'오늘':`D-${n}`;
+  const todoHtml=todayEvents.length?todayEvents.slice(0,6).map(t=>`
     <button class="todo-item" onclick="openModal('${h(t.id)}')">
       <span class="todo-mark">${t.mark}</span>
       <span><strong>${h(t.title)}</strong><span>${h(t.meta)}</span></span>
-      <span class="todo-dday">오늘</span>
-    </button>`).join(''):`<div style="padding:22px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg);border:1px solid var(--border-soft);border-radius:10px">오늘 바로 처리할 청약 일정이 없습니다.</div>`;
+      <span class="todo-dday">${ddLbl(t.d)}</span>
+    </button>`).join(''):`<div style="padding:22px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg);border:1px solid var(--border-soft);border-radius:10px">2일 이내 다가오는 청약 일정이 없습니다.</div>`;
 
   // 미리 해두면 좋을 작업 — 급한 일정이 없어도 평소에 준비해두면 좋은 작업.
   // 마감 임박해서 하면 늦는 작업 위주로, 보유 데이터가 확보된 종목에 한해 자동 생성.
@@ -848,7 +857,7 @@ function renderDashboardSupport(active, upcoming){
 
   return `
     <div class="dash-support-card">
-      <div class="dash-support-title"><h2>오늘 할 일</h2><span class="pill">${todayEvents.length}개</span></div>
+      <div class="dash-support-title"><h2>오늘·임박 일정</h2><span class="pill">${todayEvents.length}개</span></div>
       <div class="todo-items">${todoHtml}</div>
     </div>
     <div class="dash-support-card" style="margin-top:16px">
@@ -1320,7 +1329,7 @@ function renderWorkspaceSell(){
       const weekRet=calcReturn(i.finalPrice,weekHigh);
       return `<div class="workspace-sell-card" onclick="switchTab('performance');setTimeout(function(){trackerPick('${h(i.id)}')},80)">
         <strong>${h(i.name)}</strong>
-        <div class="big" style="color:${ret==null?'var(--text)':ret>=0?'var(--positive)':'var(--negative)'}">${cur?fmt.won(cur):'시세 대기'}</div>
+        <div class="big" style="color:${ret==null?'var(--text)':ret>=0?'var(--gain)':'var(--loss)'}">${cur?fmt.won(cur):'시세 대기'}</div>
         <div class="sub">현재 수익률 ${ret==null?'미정':fmt.rate(ret)} · 1주 최고 ${weekRet==null?'미정':fmt.rate(weekRet)}</div>
         <div style="margin-top:10px">${timingBadge(i)}</div>
       </div>`;
@@ -1641,9 +1650,11 @@ function renderTrackerChart(t,prices,limitFlags,customLabels){
       });
     }
   };
+  const base=filled[0];
   trackerChart=new Chart(canvas.getContext('2d'),{
     type:'line',
-    data:{ labels:labelsFilled, datasets:[{ label:'일별 고가', data:filled, borderColor:'#1E3A5F', backgroundColor:'rgba(30,58,95,.08)', fill:true, tension:0.4, cubicInterpolationMode:'monotone', pointRadius:ptRadius, pointHoverRadius:8, pointBackgroundColor:ptColor, pointStyle:ptStyle, pointBorderColor:'#fff', pointBorderWidth:2, spanGaps:true, borderWidth:2.5 }]},
+    data:{ labels:labelsFilled, datasets:[{ label:'일별 고가', data:filled, borderColor:'#1E3A5F', backgroundColor:'rgba(30,58,95,.08)', fill:true, tension:0.4, cubicInterpolationMode:'monotone', pointRadius:ptRadius, pointHoverRadius:8, pointBackgroundColor:ptColor, pointStyle:ptStyle, pointBorderColor:'#fff', pointBorderWidth:2, spanGaps:true, borderWidth:2.5, order:0 },
+      { label:base?`공모가 ${Number(base).toLocaleString('ko-KR')}원`:'공모가', data:filled.map(()=>base), borderColor:'#C8973A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, pointHoverRadius:0, fill:false, tension:0, spanGaps:true, order:1 }]},
     options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, animation:{duration:400,easing:'easeOutQuart'}, layout:{padding:{top:30,right:8,bottom:0,left:0}},
       plugins:{ legend:{display:true,align:'end',labels:{font:{family:"'Pretendard',sans-serif",size:11.5},color:'#3D5A7A',usePointStyle:true,pointStyleWidth:10,boxHeight:7}},
         tooltip:{ bodyFont:{family:"'Pretendard',sans-serif",size:12}, titleFont:{family:"'Pretendard',sans-serif",weight:'600',size:12}, backgroundColor:'rgba(15,37,64,.92)', padding:10, cornerRadius:8, displayColors:false,
@@ -1732,12 +1743,12 @@ function renderHistoryTable(){
     const weekHigh=db.weekHigh||ipo.firstDayClose||null;
     let returnPct=null;
     if(base&&weekHigh) returnPct=((weekHigh-base)/base*100);
-    const returnColor=returnPct==null?'var(--text3)':returnPct>=0?'var(--positive)':'var(--negative)';
+    const returnColor=returnPct==null?'var(--text3)':returnPct>=0?'var(--gain)':'var(--loss)';
     const returnStr  =returnPct==null?'데이터 없음':`${returnPct>=0?'+':''}${returnPct.toFixed(1)}%`;
     // 현재가: 공통 기준 (prices_latest 우선, 없으면 history 종가)
     let curPrice=getCurrentPrice(ipo);
     const curRet=(base&&curPrice)?((curPrice-base)/base*100):null;
-    const curColor=curRet==null?'var(--text3)':curRet>=0?'var(--positive)':'var(--negative)';
+    const curColor=curRet==null?'var(--text3)':curRet>=0?'var(--gain)':'var(--loss)';
     return `<div onclick="trackerPick('${ipo.id}')" style="background:var(--panel);border:1.5px solid var(--border);border-radius:var(--radius-sm,9px);padding:14px 16px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow-sm)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-md)';this.style.borderColor='rgba(30,58,95,.18)'" onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow-sm)';this.style.borderColor='var(--border)'">
       <div style="margin-bottom:12px">
         <div style="font-size:15px;font-weight:800;letter-spacing:-.02em">${ipo.name}</div>
@@ -1976,7 +1987,7 @@ function _renderRecordList(){
   if(!myRecords.length) return `<div style="padding:36px;text-align:center;color:var(--text3);font-size:13.5px">아직 청약 기록이 없습니다.<br><span style="font-size:12px;margin-top:6px;display:block">"+ 청약 기록 추가"로 직접 참여한 공모주를 입력해보세요.</span></div>`;
   const sorted=[...myRecords].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const money=(v,withSign=true)=>`${withSign&&v>=0?'+':''}${v.toLocaleString()}원`;
-  const colored=(v)=>`<span style="color:${v>=0?'var(--positive)':'var(--negative)'};font-weight:700">${money(v)}</span>`;
+  const colored=(v)=>`<span style="color:${v>=0?'var(--gain)':'var(--loss)'};font-weight:700">${money(v)}</span>`;
   return `<div class="myrec-table">
     <div class="myrec-head"><div>종목명</div><div>청약일</div><div>배정</div><div>매도손익</div><div>보유손익</div><div>총 손익</div><div></div></div>
     ${sorted.map(r=>{
@@ -2072,7 +2083,7 @@ function updateRecordPreview(){
   const sell=Number(el('rec-sell')?.value)||0;
   if(alloc&&price&&(sold&&sell)){
     const realized=Math.round((sell-price)*sold);
-    box.innerHTML=`매도 ${sold}주 실현손익: <strong style="color:${realized>=0?'var(--positive)':'var(--negative)'}">${realized>=0?'+':''}${realized.toLocaleString()}원</strong>${held>0?` · 보유 ${held}주 (현재가는 시세 동기화 후 반영)`:''}`;
+    box.innerHTML=`매도 ${sold}주 실현손익: <strong style="color:${realized>=0?'var(--gain)':'var(--loss)'}">${realized>=0?'+':''}${realized.toLocaleString()}원</strong>${held>0?` · 보유 ${held}주 (현재가는 시세 동기화 후 반영)`:''}`;
     box.style.display='block';
   } else if(alloc&&held>0){
     box.innerHTML=`보유 ${held}주 · 매도분 입력 시 손익이 계산됩니다.`;
@@ -2130,7 +2141,7 @@ function showHoldings(){
             <div class="holding-row"><span>공모가</span><span>${r.ipoPrice!=null?r.ipoPrice.toLocaleString()+'원':'—'}</span></div>
             <div class="holding-row"><span>현재가${priceInfoTip({code:r.code})}</span><span>${cur!=null?cur.toLocaleString()+'원':'<em style="color:var(--text3);font-style:normal">시세 동기화 필요</em>'}</span></div>
             <div class="holding-row strong"><span>평가액</span><span>${valuation!=null?valuation.toLocaleString()+'원':'—'}</span></div>
-            ${cur!=null?`<div class="holding-row"><span>평가손익</span><span style="color:${plus>=0?'var(--positive)':'var(--negative)'};font-weight:700">${plus>=0?'+':''}${plus.toLocaleString()}원</span></div>`:''}
+            ${cur!=null?`<div class="holding-row"><span>평가손익</span><span style="color:${plus>=0?'var(--gain)':'var(--loss)'};font-weight:700">${plus>=0?'+':''}${plus.toLocaleString()}원</span></div>`:''}
           </div>
         </div>`;
       }).join('')||'<div style="padding:24px;text-align:center;color:var(--text3)">보유 중인 종목이 없습니다.</div>'}
