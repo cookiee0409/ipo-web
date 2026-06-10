@@ -1,0 +1,10 @@
+# OS 파일
+.DS_Store
+Thumbs.db
+
+# 에디터
+.vscode/
+.idea/
+
+# 로컬 Claude 설정
+.claude/
