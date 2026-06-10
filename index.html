@@ -1736,7 +1736,7 @@ img{display:block}
 
 <div id="toast"></div>
 
-<!-- 데이터 사이트 분리 배포 시 여기에 데이터 API 도메인을 지정. 비워두면 같은 출처(/api/*) 사용. -->
+<!-- 스테이징(편집 원본) 사이트 = 자기 자신을 호출(동일 출처). promote 시 web에서는 데이터 사이트 도메인으로 치환됨. -->
 <script>window.API_BASE = 'https://ipo-data-three.vercel.app';</script>
 <script src="ipos-seed.js"></script>
 <script src="app.js"></script>

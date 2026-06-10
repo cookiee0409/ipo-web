@@ -2961,3 +2961,38 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   logAction('page_view', location.pathname);
 });
+
+// ─────────────────────────────────────────────────────────────
+// 스테이징 전용: 공개 배포(promote) 버튼
+// API_BASE===''(데이터/스테이징 사이트)에서만 노출. 공개(web)에선 API_BASE가 채워져 숨겨짐.
+// ─────────────────────────────────────────────────────────────
+function _initPromoteFab(){
+  if(typeof API_BASE!=='undefined' && API_BASE!=='') return;   // 공개 사이트에는 표시 안 함
+  if(document.getElementById('promote-fab')) return;
+  const tag=document.createElement('div');
+  tag.textContent='STAGING';
+  tag.style.cssText='position:fixed;right:18px;bottom:56px;z-index:99998;background:#E8A33D;color:#1a1206;font-size:10px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:5px;pointer-events:none';
+  const b=document.createElement('button');
+  b.id='promote-fab'; b.type='button'; b.textContent='🚀 공개 배포';
+  b.title='스테이징 내용을 공개 사이트(cookie-ipo)로 배포';
+  b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:99999;background:#1E3A5F;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer';
+  b.onclick=runPromote;
+  document.body.appendChild(tag); document.body.appendChild(b);
+}
+async function runPromote(){
+  if(typeof API_BASE!=='undefined' && API_BASE!=='') return;
+  if(!confirm('현재 스테이징 화면을 공개 사이트(cookie-ipo)로 배포합니다. 진행할까요?')) return;
+  const pw=prompt('관리자 비밀번호를 입력하세요:');
+  if(!pw) return;
+  const b=document.getElementById('promote-fab'); const orig=b?b.textContent:'';
+  if(b){ b.disabled=true; b.textContent='배포 중…'; }
+  try{
+    const r=await fetch('/api/promote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminPw:pw})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok) alert('✅ '+(j.message||'공개 사이트에 반영했습니다.')+(j.commit?`\n커밋 ${j.commit}`:''));
+    else alert('❌ 배포 실패: '+(j.error||('HTTP '+r.status))+(j.detail?`\n${j.detail}`:''));
+  }catch(e){ alert('❌ 네트워크 오류: '+e.message); }
+  finally{ if(b){ b.disabled=false; b.textContent=orig||'🚀 공개 배포'; } }
+}
+window.runPromote=runPromote;
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _initPromoteFab); else _initPromoteFab();
