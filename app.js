@@ -897,7 +897,17 @@ function renderMarketCtx(){
     };
     const fx=d.usdKrw!=null?`<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">원/달러</div><div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">${Number(d.usdKrw).toLocaleString('ko-KR')}원</div></div>`:'';
     const fngVal=(d.fng&&typeof d.fng==='object')?d.fng.score:d.fng;
-    const fng=(fngVal!=null)?`<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px"><div style="font-size:11px;color:var(--text3);font-weight:600">투자심리(공포·탐욕)</div><div style="font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:4px;white-space:nowrap">${fngVal}<span style="font-size:11px;font-weight:600;color:var(--text3)">${fngLabelKo(fngVal)}</span></div></div>`:'';
+    // 투자심리: 글로벌(CNN) 메인 + 국내 VKOSPI(전일) 보조. CNN 없으면 자체 지수기반 프록시로 폴백.
+    const cnn=d.cnnFng, vk=d.vkospi;
+    const cnnKo=r=>({'extreme fear':'극단적 공포','fear':'공포','neutral':'중립','greed':'탐욕','extreme greed':'극단적 탐욕'})[String(r||'').toLowerCase()]||'';
+    const vkSub=(vk&&vk.value!=null)?`<div style="font-size:10px;color:var(--text3);margin-top:4px;white-space:nowrap">국내 VKOSPI(전일) <b style="color:var(--text2)">${Number(vk.value).toLocaleString('ko-KR')}</b></div>`:'';
+    let _sent='';
+    if(cnn&&cnn.score!=null){
+      _sent=`<div style="font-size:11px;color:var(--text3);font-weight:600">글로벌 투자심리 <span style="font-size:9px">· CNN</span></div><div style="font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:4px;white-space:nowrap">${cnn.score}<span style="font-size:11px;font-weight:600;color:var(--text3)">${cnnKo(cnn.rating)||fngLabelKo(cnn.score)}</span></div>${vkSub}`;
+    } else if(fngVal!=null){
+      _sent=`<div style="font-size:11px;color:var(--text3);font-weight:600">투자심리 <span style="font-size:9px">· 참고(지수기반)</span></div><div style="font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:4px;white-space:nowrap">${fngVal}<span style="font-size:11px;font-weight:600;color:var(--text3)">${fngLabelKo(fngVal)}</span></div>${vkSub}`;
+    }
+    const fng=_sent?`<div style="flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:10px">${_sent}</div>`:'';
     const chips=[idxChip('코스피',d.kospi),idxChip('코스닥',d.kosdaq),fx,fng].filter(Boolean).join('');
     if(!chips){ box.innerHTML=''; return; }
     const liveBadge=live?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:#fff;background:#E23B3B;padding:2px 7px;border-radius:999px;white-space:nowrap">● 실시간</span>`:'';
